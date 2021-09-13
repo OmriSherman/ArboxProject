@@ -15,11 +15,11 @@ var last_id;
 
 async function fetchData() {
 let resp = await axios.get('http://localhost:8000/users')
-let data = resp.data.length;
+let data = resp.data;
 return data;
 }
 async function insertJimalaya() {
-last_id = await fetchData();
+currDb = await fetchData();
 const jimalayaData = excelToJson({
     sourceFile: './InputFiles/jimalaya.xlsx',
     sheets:[{
@@ -39,9 +39,14 @@ const jimalayaData = excelToJson({
     }
     }]
 });
+
 for (let i = 0; i < jimalayaData.Sheet1.length; i++) {
+
+    let checkEmailExists = currDb.map(({email})=> email)
+    .some((email => email == jimalayaData.Sheet1[i].email));
+    if(!checkEmailExists) {
     var userObj = {
-        _id: last_id + 1 + i,
+        _id: currDb.length + 1 + i,
         first_name: jimalayaData.Sheet1[i].first_name,
         last_name: jimalayaData.Sheet1[i].last_name,
         phone: jimalayaData.Sheet1[i].phone,
@@ -50,14 +55,15 @@ for (let i = 0; i < jimalayaData.Sheet1.length; i++) {
         club_id: 2400,
     }
     var memberhshipObj = {
-        user_id: last_id + 1 + i,
+        user_id: currDb.length + 1 + i,
         mem_start: jimalayaData.Sheet1[i].membership_start,
         mem_end: jimalayaData.Sheet1[i].membership_end,
         membership_name: jimalayaData.Sheet1[i].membership_name,
     }
-    userBL.addUser(userObj);
+    userBL.addUser(userObj); 
     membershipsBL.addMembership(memberhshipObj);
-    
+}
+    else(console.log("email already exists!"));
 }
 }
 insertJimalaya();
